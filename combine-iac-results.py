@@ -140,7 +140,6 @@ def main():
     elif not file_name.endswith(".xlsx"):
         file_name += ".xlsx"
 
-    #git_urls = ["https://github.com/bridgecrewio/terragoat", "https://github.com/cadonuno/verademo-sca"]
     if not git_urls:
         print("No URLs provided.")
         return
