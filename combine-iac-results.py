@@ -57,7 +57,7 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
                     "artifact_name": vuln["artifact"]["name"] if "artifact" in vuln else "N/A",
                     "artifact_version": vuln["artifact"]["version"] if "artifact" in vuln else "N/A",
                     "artifact_type": vuln["artifact"]["type"] if "artifact" in vuln else "N/A",
-                    "risk": vuln["vulnerability"]["risk"],
+                    "risk": vuln["vulnerability"]["risk"] if "risk" in vuln["vulnerability"] else "N/A",
                     "severity": vuln["vulnerability"]["severity"],
                     "CVEs": (", ".join([f"{cwe['cve']} ({cwe['cwe']})" for cwe in vuln["vulnerability"]["cwes"]])) if "cwes" in vuln["vulnerability"] else "N/A",
                     "fixes": format_fixes(vuln["vulnerability"]["fix"]),
