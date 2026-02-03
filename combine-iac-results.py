@@ -39,6 +39,9 @@ def format_fixes(fix_data: Dict) -> str:
     
     return ", ".join(fix_strings)
 
+def safe_get(dictionary, key, default="N/A") -> str:
+        return f"{key} -> {str(dictionary)}" if not isinstance(dictionary, dict) else dictionary.get(key, default)
+
 def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
     """Process results from CLI for all URLs."""
     parsed_results = {"vulnerabilities": [], "secrets": [], "configs": []}
@@ -52,40 +55,40 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
             for vuln in vulnerabilities.get("matches", []):
                 parsed_results["vulnerabilities"].append({
                     "git_url": url,
-                    "id": vuln["vulnerability"]["id"],
-                    "description": vuln["vulnerability"]["description"],
-                    "artifact_name": vuln["artifact"]["name"] if "artifact" in vuln else "N/A",
-                    "artifact_version": vuln["artifact"]["version"] if "artifact" in vuln else "N/A",
-                    "artifact_type": vuln["artifact"]["type"] if "artifact" in vuln else "N/A",
-                    "risk": vuln["vulnerability"]["risk"],
-                    "severity": vuln["vulnerability"]["severity"],
-                    "CVEs": (", ".join([f"{cwe['cve']} ({cwe['cwe']})" for cwe in vuln["vulnerability"]["cwes"]])) if "cwes" in vuln["vulnerability"] else "N/A",
-                    "fixes": format_fixes(vuln["vulnerability"]["fix"]),
+                    "id": safe_get(vuln["vulnerability"], "id"),
+                    "description": safe_get(vuln["vulnerability"], "description"),
+                    "artifact_name": safe_get(vuln["artifact"], "name") if "artifact" in vuln else "N/A",
+                    "artifact_version": safe_get(vuln["artifact"], "version") if "artifact" in vuln else "N/A",
+                    "artifact_type": safe_get(vuln["artifact"], "type") if "artifact" in vuln else "N/A",
+                    "risk": safe_get(vuln["vulnerability"], "risk"),
+                    "severity": safe_get(vuln["vulnerability"], "severity"),
+                    "CVEs": (", ".join([f"{cwe['cve']} ({cwe['cwe']})" for cwe in safe_get(vuln["vulnerability"], "cwes", [])])) if safe_get(vuln["vulnerability"], "cwes") else "N/A",
+                    "fixes": format_fixes(safe_get(vuln["vulnerability"], "fix")),
                     "raw_json": str(vuln)
                 })
         
-        for secret in cli_results.get("secrets", []):
+        for secret in safe_get(cli_results, "secrets", []):
             parsed_results["secrets"].append({
                 "git_url": url,
-                "category": secret.get("Category", "N/A"),
-                "severity": secret.get("Severity", "N/A"),
-                "start_line": secret.get("StartLine", "N/A"),
-                "end_line": secret.get("EndLine", "N/A"),
-                "match": secret.get("Match", "N/A"),
-                "file_path": secret.get("Target", "N/A"),
+                "category": safe_get(secret, "Category"),
+                "severity": safe_get(secret, "Severity"),
+                "start_line": safe_get(secret, "StartLine"),
+                "end_line": safe_get(secret, "EndLine"),
+                "match": safe_get(secret, "Match"),
+                "file_path": safe_get(secret, "Target"),
                 "code": "\n".join([line["Content"] for line in secret["Code"]["Lines"]]) if "Code" in secret else "N/A",
                 "raw_json": str(secret)
             })
         
-        for config in cli_results.get("configs", []):
+        for config in safe_get(cli_results, "configs", []):
             parsed_results["configs"].append({
                 "git_url": url,
-                "id": config.get("AVDID", "N/A"),
-                "target": config.get("Target", "N/A"),
-                "title": config.get("Title", "N/A"),
-                "type": config.get("Type", "N/A"),                
-                "description": config.get("Description", "N/A"),
-                "resolution": config.get("Resolution", "N/A"),
+                "id": safe_get(config, "AVDID", "N/A"),
+                "target": safe_get(config, "Target", "N/A"),
+                "title": safe_get(config, "Title", "N/A"),
+                "type": safe_get(config, "Type", "N/A"),                
+                "description": safe_get(config, "Description", "N/A"),
+                "resolution": safe_get(config, "Resolution", "N/A"),
                 "raw_json": str(config)
             })
     
