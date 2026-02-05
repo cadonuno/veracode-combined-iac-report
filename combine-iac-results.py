@@ -44,11 +44,16 @@ def safe_get(dictionary, key, default="N/A") -> str:
 
 def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
     """Process results from CLI for all URLs."""
-    parsed_results = {"vulnerabilities": [], "secrets": [], "configs": []}
+    parsed_results = {"raw_json": [], "vulnerabilities": [], "secrets": [], "configs": []}
     
     for url in git_urls:
         print(f"Processing {url}...")
         cli_results = run_cli_command(url)
+
+        parsed_results["raw_json"].append({
+            "git_url": url,
+            "raw_json": str(cli_results)
+        })
 
         vulnerabilities = cli_results.get("vulnerabilities", {})
         if vulnerabilities:
