@@ -52,7 +52,7 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
 
         parsed_results["raw_json"].append({
             "git_url": url,
-            "raw_json": str(cli_results)
+            "raw_json": json.dumps(cli_results)
         })
 
         vulnerabilities = cli_results.get("vulnerabilities", {})
@@ -72,30 +72,83 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
                     "raw_json": str(vuln)
                 })
         
-        for secret in safe_get(cli_results, "secrets", []):
-            parsed_results["secrets"].append({
-                "git_url": url,
-                "category": safe_get(secret, "Category"),
-                "severity": safe_get(secret, "Severity"),
-                "start_line": safe_get(secret, "StartLine"),
-                "end_line": safe_get(secret, "EndLine"),
-                "match": safe_get(secret, "Match"),
-                "file_path": safe_get(secret, "Target"),
-                "code": "\n".join([line["Content"] for line in secret["Code"]["Lines"]]) if "Code" in secret else "N/A",
-                "raw_json": str(secret)
-            })
+        secrets = safe_get(cli_results, "secrets", [])
+        if isinstance(secrets, list):
+            for secret in secrets:
+                parsed_results["secrets"].append({
+                    "git_url": url,
+                    "category": safe_get(secret, "Category"),
+                    "severity": safe_get(secret, "Severity"),
+                    "start_line": safe_get(secret, "StartLine"),
+                    "end_line": safe_get(secret, "EndLine"),
+                    "match": safe_get(secret, "Match"),
+                    "file_path": safe_get(secret, "Target"),
+                    "code": "\n".join([line["Content"] for line in secret["Code"]["Lines"]]) if "Code" in secret else "N/A",
+                    "raw_json": str(secret)
+                })
+        else:
+           results = safe_get(secrets, "Results", [])
+           for result in results:
+                inner_secrets = safe_get(result, "Secrets", [])
+                for secret in inner_secrets:
+                    parsed_results["secrets"].append({
+                        "git_url": url,
+                        "category": safe_get(secret, "Category"),
+                        "severity": safe_get(secret, "Severity"),
+                        "start_line": safe_get(secret, "StartLine"),
+                        "end_line": safe_get(secret, "EndLine"),
+                        "match": safe_get(secret, "Match"),
+                        "file_path": safe_get(result, "Target"),
+                        "code": "\n".join([line["Content"] for line in secret["Code"]["Lines"]]) if "Code" in secret else "N/A",
+                        "raw_json": str(secret)
+                    })
+
         
-        for config in safe_get(cli_results, "configs", []):
-            parsed_results["configs"].append({
-                "git_url": url,
-                "id": safe_get(config, "AVDID", "N/A"),
-                "target": safe_get(config, "Target", "N/A"),
-                "title": safe_get(config, "Title", "N/A"),
-                "type": safe_get(config, "Type", "N/A"),                
-                "description": safe_get(config, "Description", "N/A"),
-                "resolution": safe_get(config, "Resolution", "N/A"),
-                "raw_json": str(config)
-            })
+        configs = safe_get(cli_results, "configs", [])
+        if isinstance(secrets, list):
+            for config in configs:
+                parsed_results["configs"].append({
+                    "git_url": url,
+                    "target_type": "N/A",
+                    "avdid": safe_get(config, "AVDID", "N/A"),
+                    "id": "N/A",
+                    "severity": safe_get(config, "Severity", "N/A"),
+                    "status": safe_get(config, "Status", "N/A"),
+                    "message": safe_get(config, "Message", "N/A"),
+                    "namespace": safe_get(config, "Namespace", "N/A"),
+                    "primary_url": safe_get(config, "PrimaryURL", "N/A"),
+                    "query": safe_get(config, "Query", "N/A"),
+                    "target": safe_get(config, "Target", "N/A"),
+                    "title": safe_get(config, "Title", "N/A"),
+                    "type": safe_get(config, "Type", "N/A"),                
+                    "description": safe_get(config, "Description", "N/A"),
+                    "resolution": safe_get(config, "Resolution", "N/A"),
+                    "raw_json": str(config)
+                })            
+        else:
+            results = safe_get(configs, "Results", [])
+            if results:
+                for result in results:
+                    for misconfiguration in safe_get(result, "Misconfigurations", []):
+                        parsed_results["configs"].append({
+                            "git_url": url,
+                            "target_type": safe_get(result, "Type", "N/A"),
+                            "avdid": safe_get(misconfiguration, "AVDID", "N/A"),
+                            "id": safe_get(misconfiguration, "ID", "N/A"),
+                            "severity": safe_get(misconfiguration, "Severity", "N/A"),
+                            "status": safe_get(misconfiguration, "Status", "N/A"),
+                            "message": safe_get(misconfiguration, "Message", "N/A"),
+                            "namespace": safe_get(misconfiguration, "Namespace", "N/A"),
+                            "primary_url": safe_get(misconfiguration, "PrimaryURL", "N/A"),
+                            "query": safe_get(misconfiguration, "Query", "N/A"),
+                            "target": safe_get(result, "Target", "N/A"),
+                            "title": safe_get(misconfiguration, "Title", "N/A"),
+                            "type": safe_get(misconfiguration, "Type", "N/A"),
+                            "description": safe_get(misconfiguration, "Description", "N/A"),
+                            "resolution": safe_get(misconfiguration, "Resolution", "N/A"),
+                            "raw_json": str(misconfiguration)   
+                        })
+            
     
     return parsed_results
 
