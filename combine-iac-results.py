@@ -78,6 +78,8 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
                 parsed_results["secrets"].append({
                     "git_url": url,
                     "category": safe_get(secret, "Category"),
+                    "rule_id": "N/A",
+                    "title": "N/A",
                     "severity": safe_get(secret, "Severity"),
                     "start_line": safe_get(secret, "StartLine"),
                     "end_line": safe_get(secret, "EndLine"),
@@ -94,6 +96,8 @@ def process_results(git_urls: List[str]) -> Dict[str, List[Dict]]:
                     parsed_results["secrets"].append({
                         "git_url": url,
                         "category": safe_get(secret, "Category"),
+                        "rule_id": safe_get(result, "RuleID"),
+                        "title": safe_get(result, "Title"),
                         "severity": safe_get(secret, "Severity"),
                         "start_line": safe_get(secret, "StartLine"),
                         "end_line": safe_get(secret, "EndLine"),
